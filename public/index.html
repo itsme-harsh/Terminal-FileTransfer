@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Terminal - P2P Transfer</title>
+    <title>Terminal - P2P</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -80,7 +80,7 @@
     <div
       class="w-full max-w-xl bg-terminal rounded-2xl shadow-2xl p-6 space-y-6 border border-green-600 animate-fade"
     >
-      <h2 class="lg:text-3xl text-2xl font-bold text-center text-primary">
+      <h2 class="lg:text-3xl text-2xl font-bold text-center text-primary" id="title">
         🟢 Terminal File Share
       </h2>
 
@@ -160,6 +160,21 @@
         </p>
       </div>
 
+      <div
+        id="chatBox"
+        class="hidden flex flex-col h-64 border border-green-800 rounded-lg overflow-hidden"
+      >
+        <div
+          id="chatLog"
+          class="flex-1 p-2 overflow-auto text-green-400 text-sm bg-black"
+        ></div>
+        <input
+          id="chatInput"
+          class="p-2 border-t border-green-800 bg-terminal text-green-300 placeholder-green-600"
+          placeholder="Type a message..."
+        />
+      </div>
+
       <!-- Output log -->
       <pre
         id="output"
@@ -173,6 +188,9 @@
       const socket = io();
       let peerConnection, dataChannel;
       let room;
+      let chatRoom;
+
+      const title = document.getElementById("title")
 
       const log = (msg) => {
         const out = document.getElementById("output");
@@ -192,6 +210,16 @@
               log(`🧩 Created/Joined room: ${room}`);
               document.getElementById("dropZone").classList.remove("hidden");
               document.getElementById("sendBtn").classList.remove("hidden");
+              document.getElementById("noteBox")?.classList.add("hidden");
+              document
+                .getElementById("terminalInputWrapper")
+                ?.classList.add("hidden");
+            } else if (input.startsWith("chat ")) {
+              chatRoom = input.split(" ")[1];
+              title.textContent = "🟢 Terminal Chat Share"
+              socket.emit("join", chatRoom);
+              log(`💬 Joined chat room: ${chatRoom}`);
+              document.getElementById("chatBox").classList.remove("hidden");
               document.getElementById("noteBox")?.classList.add("hidden");
               document
                 .getElementById("terminalInputWrapper")
@@ -350,6 +378,44 @@
       fileInput.addEventListener("change", () => {
         const file = fileInput.files[0];
         if (file) fileNameLabel.innerText = file.name;
+      });
+
+      const chatInput = document.getElementById("chatInput");
+      const chatLog = document.getElementById("chatLog");
+
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const message = chatInput.value.trim();
+          if (message !== "") {
+            socket.emit("chat-message", {chatRoom, message}); // send to server
+            appendMessage("sent", message); // show in UI
+            chatInput.value = "";
+          }
+        }
+      });
+
+      socket.on("chat-message", ( message ) => {
+        appendMessage("received",message);
+      });
+
+      function appendMessage(chatRoom, message) {
+        const msgEl = document.createElement("div");
+        msgEl.classList.add("mb-1");
+        msgEl.innerHTML = `<span class="text-green-500 font-bold">${chatRoom}:</span> ${message}`;
+        chatLog.appendChild(msgEl);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+      commandInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const input = e.target.value.trim();
+          const [command, ...args] = input.split(/\s+/);
+
+          if (command === "chat" && args.length === 1) {
+            const chatRoom = args[0];
+            currentRoom = chatRoom;
+            socket.emit("join", chatRoom);
+          }
+        }
       });
     </script>
   </body>
