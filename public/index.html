@@ -45,6 +45,22 @@
       opacity: 0.3;
       z-index: -1;
     }
+
+     /* Custom green scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #001a00;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #00ff00;
+        border-radius: 6px;
+        border: 2px solid #001a00;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #00cc00;
+      }
   </style>
 </head>
 <body class="bg-dark text-primary font-hacker min-h-screen flex items-center justify-center px-4">
