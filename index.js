@@ -14,6 +14,10 @@ io.on('connection', (socket) => {
     socket.to(room).emit('peer-connected');
   });
 
+  socket.on('chat-message', ({ chatRoom, message }) => {
+    socket.to(chatRoom).emit('chat-message', message);
+  });  
+
   socket.on('signal', ({ room, data }) => {
     socket.to(room).emit('signal', data);
   });
